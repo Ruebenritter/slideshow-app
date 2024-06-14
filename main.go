@@ -117,7 +117,7 @@ func showSlideshow(a fyne.App, slideshowObj *slideshow.Slideshow) {
 	imageCanvas.FillMode = canvas.ImageFillContain
 	imageCanvas.SetMinSize(fyne.NewSize(1920/2, 800))
 
-	currentIndexLabel := widget.NewLabel(fmt.Sprint(slideshowObj.CurrentIndex) + " of " + fmt.Sprint(len(slideshowObj.Images)))
+	currentIndexLabel := widget.NewLabel(fmt.Sprint(slideshowObj.CurrentIndex+1) + " of " + fmt.Sprint(len(slideshowObj.Images)))
 
 	progressBar := widget.NewProgressBar()
 	progressBar.Max = float64(slideshowObj.SlideDuration.Seconds())
@@ -164,6 +164,7 @@ func showSlideshow(a fyne.App, slideshowObj *slideshow.Slideshow) {
 			case img := <-slideshowObj.ImageChan():
 				imageCanvas.File = img
 				imageCanvas.Refresh()
+				currentIndexLabel.SetText(fmt.Sprint(slideshowObj.CurrentIndex+1) + " of " + fmt.Sprint(len(slideshowObj.Images)))
 				progressBar.SetValue(0)
 			case <-slideshowObj.StopChan:
 				return

@@ -66,8 +66,8 @@ func (s *Slideshow) Start() {
 
 func (s *Slideshow) Pause() {
 	if s.paused {
-		s.timer = time.NewTimer(s.elapsedTime)
-		s.ticker = time.NewTicker(time.Second)
+		s.timer.Reset(s.SlideDuration - s.elapsedTime)
+		s.ticker.Reset(time.Second)
 	} else {
 		s.timer.Stop()
 		s.ticker.Stop()
@@ -78,7 +78,7 @@ func (s *Slideshow) Pause() {
 // next slide func with index parameter
 func (s *Slideshow) NextSlide(index int) string {
 	s.CurrentIndex = index
-	s.resetTimerAndTicker()
+	s.Start()
 	s.imageChan <- s.Images[s.CurrentIndex]
 	return s.Images[s.CurrentIndex]
 }
