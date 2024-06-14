@@ -89,7 +89,7 @@ func main() {
 		startButton,
 	))
 
-	w.Resize(fyne.NewSize(400, 400))
+	w.Resize(fyne.NewSize(1200, 800))
 	w.ShowAndRun()
 }
 
@@ -110,62 +110,39 @@ func getImagesFromDir(dir string) []string {
 	return images
 }
 
-func showSlideshow(a fyne.App, slideshow *Slideshow) {
+func showSlideshow(a fyne.App, slideshowObj *slideshow.Slideshow) {
 	w := a.NewWindow("Slideshow")
 
-	imageCanvas := canvas.NewImageFromFile(slideshow.images[slideshow.index])
+	imageCanvas := canvas.NewImageFromFile(slideshowObj.Images[slideshowObj.CurrentIndex])
 	imageCanvas.FillMode = canvas.ImageFillContain
 	imageCanvas.SetMinSize(fyne.NewSize(1920/2, 800))
 
-	currentIndexLabel := widget.NewLabel(fmt.Sprint(slideshow.index) + " of " + fmt.Sprint(len(slideshow.images)))
+	currentIndexLabel := widget.NewLabel(fmt.Sprint(slideshowObj.CurrentIndex) + " of " + fmt.Sprint(len(slideshowObj.Images)))
 
 	progressBar := widget.NewProgressBar()
-	progressBar.Max = float64(slideshow.slideDuration.Seconds())
-
-	updateImage := func() {
-		imageCanvas.File = slideshow.images[slideshow.index]
-		imageCanvas.Refresh()
-		currentIndexLabel.SetText(fmt.Sprint(slideshow.index) + " of " + fmt.Sprint(len(slideshow.images)))
-
-		slideshow.remaningTime = slideshow.slideDuration
-		slideshow.paused = false
-		startTimer(slideshow, progressBar)
-	}
+	progressBar.Max = float64(slideshowObj.SlideDuration.Seconds())
 
 	nextButton := widget.NewButton("Next", func() {
-		slideshow.index = (slideshow.index + 1) % len(slideshow.images)
-		// stop timer and ticker
-		slideshow.stopChan <- true
-		updateImage()
+		slideshowObj.NextSlide((slideshowObj.CurrentIndex + 1) % len(slideshowObj.Images))
 	})
 
 	prevButton := widget.NewButton("Previous", func() {
-		slideshow.index = (slideshow.index - 1 + len(slideshow.images)) % len(slideshow.images)
-		// stop timer and ticker
-		slideshow.stopChan <- true
-		updateImage()
+		slideshowObj.NextSlide((slideshowObj.CurrentIndex - 1 + len(slideshowObj.Images)) % len(slideshowObj.Images))
 	})
 
 	var pauseButton *widget.Button
 	pauseButton = widget.NewButton("Pause", func() {
-		if slideshow.paused {
-			slideshow.paused = false
-			startTimer(slideshow, progressBar)
+		if slideshowObj.IsPaused() {
+			slideshowObj.Pause()
 			pauseButton.SetText("Pause")
 		} else {
-			slideshow.paused = true
-			if slideshow.timer != nil {
-				slideshow.timer.Stop()
-			}
-			if slideshow.ticker != nil {
-				slideshow.ticker.Stop()
-			}
+			slideshowObj.Pause()
 			pauseButton.SetText("Resume")
 		}
 	})
 
 	stopButton := widget.NewButton("Stop", func() {
-		slideshow.stopChan <- true
+		slideshowObj.Stop()
 		w.Close()
 	})
 
@@ -178,46 +155,20 @@ func showSlideshow(a fyne.App, slideshow *Slideshow) {
 	w.SetContent(split)
 	w.Resize(fyne.NewSize(1280, 720))
 
-	updateImage()
-	w.Show()
-}
-
-func (s *Slideshow) nextImage() {
-	s.index = (s.index + 1) % len(s.images)
-}
-
-func startTimer(slideshow *Slideshow, progressBar *widget.ProgressBar) {
-	if slideshow.timer != nil {
-		slideshow.timer.Stop()
-	}
-
-	slideshow.timer = time.NewTimer(slideshow.remaningTime)
-	slideshow.ticker = time.NewTicker(time.Second)
-	progressBar.SetValue(slideshow.slideDuration.Seconds() - slideshow.remaningTime.Seconds())
-
 	go func() {
+		slideshowObj.Start()
 		for {
 			select {
-			case <-slideshow.timer.C:
-				slideshow.index = (slideshow.index + 1) % len(slideshow.images)
-				updateImage := func() {
-					progressBar.SetValue(0)
-					slideshow.remaningTime = slideshow.slideDuration
-				}
-				updateImage()
-				slideshow.nextImage()
-				return
-			case <-slideshow.ticker.C:
-				if !slideshow.paused {
-					slideshow.remaningTime -= time.Second
-					progressBar.SetValue(progressBar.Value + 1)
-				}
-			case <-slideshow.stopChan:
-				slideshow.timer.Stop()
-				slideshow.ticker.Stop()
+			case progress := <-slideshowObj.ProgressChan():
+				progressBar.SetValue(progress)
+			case img := <-slideshowObj.ImageChan():
+				imageCanvas.File = img
+				imageCanvas.Refresh()
+				progressBar.SetValue(0)
+			case <-slideshowObj.StopChan:
 				return
 			}
 		}
 	}()
-
+	w.Show()
 }
