@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/Ruebenritter/slideshow-app/slideshow"
+
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/canvas"
@@ -15,17 +17,6 @@ import (
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/widget"
 )
-
-type Slideshow struct {
-	images        []string
-	slideDuration time.Duration
-	timer         *time.Timer
-	ticker        *time.Ticker
-	remaningTime  time.Duration
-	paused        bool
-	index         int
-	stopChan      chan bool
-}
 
 func main() {
 	a := app.New()
@@ -85,11 +76,8 @@ func main() {
 			images[i], images[j] = images[j], images[i]
 		})
 
-		slideshow := &Slideshow{
-			images:        images[:amount],
-			slideDuration: timePerImage,
-			stopChan:      make(chan bool),
-		}
+		slideshow := slideshow.NewSlideshow(images[:amount], timePerImage)
+
 		showSlideshow(a, slideshow)
 	})
 
