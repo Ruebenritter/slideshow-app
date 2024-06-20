@@ -9,6 +9,8 @@ import (
 
 	"github.com/Ruebenritter/slideshow-app/slideshow"
 
+	"strconv"
+
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/canvas"
@@ -36,10 +38,37 @@ func main() {
 	})
 
 	timeEntry := widget.NewEntry()
+	// set min width of time entry to 100px
+	timeEntry.Resize(fyne.NewSize(300, timeEntry.MinSize().Height))
 	timeEntry.SetPlaceHolder("Enter time per image in seconds")
+
+	// add row of buttons with preset times between 60s and 300s
+	presetTimes := []int{60, 120, 180, 240, 300}
+	presetTimeButtons := make([]fyne.CanvasObject, len(presetTimes))
+	for i, t := range presetTimes {
+		time := t
+		button := widget.NewButton(strconv.Itoa(time), func() {
+			timeEntry.SetText(strconv.Itoa(time))
+		})
+		presetTimeButtons[i] = button
+	}
+
+	presetTimeRow := container.NewGridWithColumns(2, timeEntry, container.NewHBox(presetTimeButtons...))
 
 	amountEntry := widget.NewEntry()
 	amountEntry.SetPlaceHolder("Enter amount of images")
+
+	presetAmounts := []int{10, 25, 50, 75, 100}
+	presetAmountButtons := make([]fyne.CanvasObject, len(presetAmounts))
+	for i, a := range presetAmounts {
+		amount := a
+		button := widget.NewButton(strconv.Itoa(amount), func() {
+			amountEntry.SetText(strconv.Itoa(amount))
+		})
+		presetAmountButtons[i] = button
+	}
+
+	presetAmountRow := container.NewGridWithColumns(2, amountEntry, container.NewHBox(presetAmountButtons...))
 
 	startButton := widget.NewButton("Start Slideshow", func() {
 		timePerImage, err1 := time.ParseDuration(timeEntry.Text + "s")
@@ -84,8 +113,8 @@ func main() {
 	grid := container.New(layout.NewGridLayout(2), selectionDirButton, dirEntryDisplay)
 	w.SetContent(container.NewVBox(
 		grid,
-		timeEntry,
-		amountEntry,
+		presetTimeRow,
+		presetAmountRow,
 		startButton,
 	))
 
