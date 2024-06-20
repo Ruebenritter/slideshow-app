@@ -118,6 +118,7 @@ func showSlideshow(a fyne.App, slideshowObj *slideshow.Slideshow) {
 	imageCanvas.SetMinSize(fyne.NewSize(1920/2, 800))
 
 	currentIndexLabel := widget.NewLabel(fmt.Sprint(slideshowObj.CurrentIndex+1) + " of " + fmt.Sprint(len(slideshowObj.Images)))
+	centeredLabel := container.New(layout.NewCenterLayout(), currentIndexLabel)
 
 	progressBar := widget.NewProgressBar()
 	progressBar.Max = float64(slideshowObj.SlideDuration.Seconds())
@@ -147,9 +148,10 @@ func showSlideshow(a fyne.App, slideshowObj *slideshow.Slideshow) {
 	})
 
 	buttons := container.NewHBox(prevButton, pauseButton, nextButton)
-	slideGroup := container.NewVBox(currentIndexLabel, buttons, progressBar, stopButton)
+	slideGroup := container.NewVBox(centeredLabel, buttons, progressBar, stopButton)
+	centeredButtonGrop := container.New(layout.NewCenterLayout(), slideGroup)
 
-	split := container.NewHSplit(slideGroup, imageCanvas)
+	split := container.NewHSplit(centeredButtonGrop, imageCanvas)
 	split.Offset = 0.33
 
 	w.SetContent(split)
