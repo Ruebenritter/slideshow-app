@@ -1,4 +1,4 @@
-package slideshow
+package main
 
 import (
 	"time"
