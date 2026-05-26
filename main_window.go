@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"math/rand"
 	"strconv"
 	"time"
 
@@ -95,9 +94,11 @@ func BuildMainWindow() {
 			amount = len(images)
 		}
 
-		rand.Shuffle(len(images), func(i, j int) {
-			images[i], images[j] = images[j], images[i]
-		})
+		// images come in lexical order, so we shuffle before we slice the first n images for better randomness
+		// ToDo: Decide whether user should have the option to disable shuffling.
+		// ToDo: Pick the correct amount of images instead of checking all.
+		// → look at random file in directory, validate extension and add to list until n = amount
+		shuffleImages(&images)
 
 		slideshow := NewSlideshow(images[:amount], timePerImage)
 

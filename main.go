@@ -2,8 +2,6 @@ package main
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
@@ -14,23 +12,6 @@ import (
 
 func main() {
 	BuildMainWindow()
-}
-
-func getImagesFromDir(dir string) []string {
-	var images []string
-	filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-		if !info.IsDir() {
-			ext := filepath.Ext(info.Name())
-			if ext == ".jpg" || ext == ".jpeg" || ext == ".png" || ext == ".gif" {
-				images = append(images, path)
-			}
-		}
-		return nil
-	})
-	return images
 }
 
 func showSlideshow(a fyne.App, slideshowObj *Slideshow) {
